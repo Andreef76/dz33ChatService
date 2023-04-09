@@ -1,62 +1,58 @@
-import communication.chat1
-import communication.chat2
+
 import communication.chatKit
-import communication.clear
 import communication.getChats
 import communication.getRecentChats
 import communication.getUnreadChatsCount
-import communication.message1
-import communication.message2
 
 
 object communication {
-    var chatKit: MutableList<Chat> = arrayListOf()        // список чатов
-    var message1 = DirectMessages(1, "AAA", false, false)
-    var message2 = DirectMessages(2, "BBB", false, false)
-    var message3 = DirectMessages(3, "FFF", false, false)
-    var chat1 = Chat(11, false, false)
-    var chat2 = Chat(12, false, false)
+
+    private var currentUserId: Int = 0
+    var chatKit: MutableList<Chat> = mutableListOf()        // список чатов
 
 
-    fun clear() {
+    fun setCurrentUserId(id: Int) {
+        currentUserId = id
+    }
+    fun clearChat() {
         chatKit.clear()
     }
 
-    fun createChat(chat: Chat): Chat {     // создает чат
-        chatKit.add(chat)
+    fun createChat(forUserId: Int): Chat {     // создает чат
+        val newChat = Chat(sortedSetOf(forUserId, currentUserId).toList(), mutableListOf())
+        chatKit.add(newChat)
         return chatKit.last()
     }
 
-    fun createMessages(chat: Chat, element: DirectMessages): DirectMessages { // создает сообщение чата, в случае если сообщение то сначала первое создает сам чат
-        if (!chat.messageKit.contains(element)) {
-            createChat(chat)
-        }
-        chat.messageKit.add(element)
+    fun createMessages(forUserId: Int, element: DirectMessages): DirectMessages { // создает сообщение чата, в случае если сообщение то сначала первое создает сам чат
+
+        val chat = chatKit.find { it.chatId == sortedSetOf(forUserId, currentUserId).toList() }  // если такого нет вернёт null и сработает элвис
+            ?: createChat(forUserId) // и создастся новый чат.
+        chat.messageKit.add(element) // Проверили есть ли чат, если нет создали и в него уже записали сообщение
         return chat.messageKit.last()
     }
 
-    fun <T> edit(list: MutableList<T>, element: T): Boolean {     // редактирует сообщение в чате
-        list.find { it == element } ?: throw NoteNotFoundException("Сообщение не найдено")//равны будут при равных id (изменённый метод equals), если не найдёт равных сразу вернёт false
+    fun <T> edit(list: MutableList<T>?, element: T): Boolean {     // редактирует сообщение в чате
+        list?.find { it == element } ?: throw ChatNotFoundException("Сообщение не найдено")//равны будут при равных id (изменённый метод equals), если не найдёт равных сразу вернёт false
         val index = list.indexOf(element) // вычисляем индекс подошедшего элемента
         list.removeAt(index) //удаляем элемент по индексу
         list.add(index, element) // добавляем элемент по индексу
         return true
     }
 
-    fun <T> delete(list: MutableList<T>, element: T): Boolean {         // метод помечает как удаленные сообщение в чате или сам чат
-        list.find { it == element }
+    fun <T> delete(list: MutableList<T>?, element: T): Boolean {         // метод помечает как удаленные сообщение в чате или сам чат
+        list?.find { it == element }
             ?: return false //равны будут при равных id (изменённый метод equals), если не найдёт равных сразу вернёт false
         if (element is DirectMessages) {
-            val forEditing =
-                list.find { it == element } // здесь ищется потому что равны при равном id благодаря equals переназначенному
-            forEditing as DirectMessages  // находит в списке элемент с таким же id и передаёт дальше уже его, а не входной ОК
+            val forEditing = list.find { it == element } // здесь ищется потому что равны при равном id благодаря equals переназначенному
+            forEditing as DirectMessages  // находит в списке элемент с таким же id и передаёт дальше уже его, а не входной
             return edit(list as MutableList<DirectMessages>, forEditing.copy(isDelete = true))
         }
         if (element is Chat) {
             val forEditing =
-                list.find { it == element } // Сначала найти такой объект в списке, а потом уже создавать копию
+                list.find { it == element } ?: return false // Сначала найти такой объект в списке, а потом уже создавать копию
             forEditing as Chat
-            return edit(list as MutableList<Chat>, forEditing.copy(isDelete = true))
+            return list.remove(forEditing)
         }
         return list.remove(element)
     }
@@ -70,12 +66,12 @@ object communication {
             forEditing as DirectMessages
             return edit(list as MutableList<DirectMessages>, forEditing.copy(readMark = true))
         }
-        if (element is Chat) {
-            val forEditing = list.find { it == element }
-            forEditing as Chat
-            return edit(list as MutableList<Chat>, forEditing.copy(readMark = true))
-        }
-        return list.remove(element)
+//        if (element is Chat) {
+//            val forEditing = list.find { it == element }
+//            forEditing as Chat
+//            return edit(list as MutableList<Chat>, forEditing.copy(readMark = true))
+//        }
+        return false
     }
 
     fun getChats() {                         //  возвращает список чатов если они есть
@@ -89,7 +85,7 @@ object communication {
     fun getChatsId(element: Int) {                         //  возвращает список сообщений из чата по Id
         if (chatKit.size > 0) {
             for (item in chatKit) {
-                if (item.chatId == element)
+                if (item.chatId.contains(currentUserId))
                     println(item)
             }
         } else println("Чата с таким Id нет")
@@ -115,32 +111,34 @@ object communication {
         println("количество непрочитанных сообщений чата составляет - $quantity")
     }
 }
+
+var message1 = DirectMessages(1, "AAA", false, false)
+var message2 = DirectMessages(2, "BBB", false, false)
+var message3 = DirectMessages(3, "FFF", false, false)
+var chat1 = Chat(listOf(0, 11))
+var chat2 = Chat(listOf(0, 12))
     fun main() {
 
-//        communication.createChat(chat1)
-//        communication.createChat(chat2)
-        communication.createMessages(chat1, communication.message1)
-        communication.createMessages(chat1, communication.message2)
-        communication.createMessages(chat1, communication.message3)
-        println(chat1.messageKit)
-        println(chatKit)
-
-        communication.edit(chat1.messageKit, message2.copy(text = "CCC"))
-        communication.delete(chat1.messageKit, message2)
+        communication.createChat(11)
+//        communication.createChat(2)
+        communication.createMessages(55, message1)
+        communication.createMessages(945, message2)
+        communication.createMessages(123, message3)
+//        println(chat1.messageKit)
+//        println(chatKit)
+//
+        communication.edit(chatKit.find { it.chatId == sortedSetOf(0, 55).toList() }?.messageKit, message1.copy(text = "CCC"))
+        communication.delete(chatKit.find { it.chatId == sortedSetOf(0, 55).toList() }?.messageKit, message1)
         communication.reading(chat1.messageKit, message1)
-        communication.delete(chatKit, chat2)
-           println(chatKit)
 
+        communication.getMessage(chat1)
         getChats()
-        getRecentChats(chat1, 1)
+        getRecentChats(chat1, 3)
         getUnreadChatsCount(chat1)
         communication.getChatsId(12)
-        communication.getMessageRead(chat1, 2)
+        communication.getMessageRead(chatKit[1], 1)
+        getChats()
     }
 
 
-
-
-
-//Создать чат. Чат создаётся, когда пользователю отправляется первое сообщение.
 

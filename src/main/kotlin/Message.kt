@@ -1,9 +1,7 @@
 
 data class Chat(
-    val chatId: Int,                  // id чата
-    val isDelete: Boolean,            // отметка об удалении чата. Tru - удалено
-    val readMark: Boolean,          // отметка о прочтении чата. Tru - прочтено
-    var messageKit: MutableList<DirectMessages> = arrayListOf()   // список сообщений чата
+    val chatId: List<Int>,                  // id чата
+    var messageKit: MutableList<DirectMessages> = mutableListOf()   // список сообщений чата
 ) {
 
     override fun equals(other: Any?): Boolean {
