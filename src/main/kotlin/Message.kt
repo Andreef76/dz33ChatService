@@ -13,8 +13,8 @@ data class DirectMessages (
     val idMessage: Int,                  // id текущего сообщения
     val text: String,                   // текст сообщения
     val isDelete: Boolean,             // отметка об удалении сообщения. Tru - удалено
-    val readMark: Boolean             // отметка о прочтении сообщения. Tru - прочтено
-
+    val readMark: Boolean,             // отметка о прочтении сообщения. Tru - прочтено
+    val authorId: Int = -1
 ) {
     override fun equals(other: Any?): Boolean {
         val expected = if (other is DirectMessages) other else return super.equals(other)

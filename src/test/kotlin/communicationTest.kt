@@ -18,7 +18,7 @@ class communicationTest {
 
     @Test
     fun createMessagesTest() {
-        var message1 = DirectMessages(1, "AAA", false, false)
+        var message1 = DirectMessages(1, "AAA", false, false, authorId = 0)
         var message2 = DirectMessages(2, "BBB", false, false)
         val result = communication.createMessages(15, message1)
         assertEquals("$message1", result.toString())
